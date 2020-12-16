@@ -72,9 +72,13 @@ class App {
   #mapEvent;
   #workouts = [];
   constructor() {
+    // get user's position
     this._getPosition();
-    form.addEventListener('submit', this._newWorkout.bind(this));
 
+    // get data from local storage
+    this._getLocalStorage();
+    // event handlers
+    form.addEventListener('submit', this._newWorkout.bind(this));
     inputType.addEventListener('change', this._toggleElevationField);
     containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
   }
@@ -91,7 +95,6 @@ class App {
   _loadMap(position) {
     const { latitude } = position.coords;
     const { longitude } = position.coords;
-    console.log(`https://www.google.pt/maps/@${latitude},${longitude}`);
 
     const coords = [latitude, longitude];
 
@@ -104,6 +107,10 @@ class App {
 
     // handling cliks on map
     this.#map.on('click', this._showForm.bind(this));
+
+    this.#workouts.forEach(workout => {
+      this._renderWorkoutMarker(workout);
+    });
   }
   _showForm(mapE) {
     this.#mapEvent = mapE;
@@ -168,7 +175,7 @@ class App {
 
     // add new object to workout array
     this.#workouts.push(workout);
-    console.log(workout);
+
     // render workout on list
     this._renderWorkout(workout);
 
@@ -176,6 +183,9 @@ class App {
     this._renderWorkoutMarker(workout);
 
     this._hideForm();
+
+    // Set local storage to all workouts
+    this._setLocalStorage();
   }
 
   _renderWorkoutMarker(workout) {
@@ -262,7 +272,28 @@ class App {
       },
     });
 
-    workout.click();
+    // workout.click();
+  }
+
+  _setLocalStorage() {
+    localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+  }
+
+  _getLocalStorage() {
+    const data = JSON.parse(localStorage.getItem('workouts'));
+
+    if (!data) return;
+
+    this.#workouts = data;
+
+    this.#workouts.forEach(workout => {
+      this._renderWorkout(workout);
+    });
+  }
+
+  reset() {
+    localStorage.removeItem('workouts');
+    location.reload();
   }
 }
 
